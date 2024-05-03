@@ -1,0 +1,109 @@
+<!DOCTYPE HTML>
+<!--
+	Editorial by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+	<head>
+		<title>Machine Learning Model</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+	</head>
+	<body class="is-preload">
+
+		<!-- Wrapper -->
+			<div id="wrapper">
+
+				<!-- Main -->
+					<div id="main">
+						<div class="inner">
+
+							<!-- Header -->
+								<header id="header">
+									<a href="index.html" class="logo"><strong>Examining NYC Open Collision Data</strong> by Emmanuel Yankson</a>
+								</header>
+
+							<!-- Content -->
+								<section>
+									<header class="main">
+										<h1>Machine Learning Model</h1>
+									</header>
+
+									<!-- Python Code -->
+									<div class="row gtr-200">
+										<div class="col-12">
+											<h2>Python Code for Model</h2>
+											<pre><code>
+import pandas as pd
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.impute import SimpleImputer
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+
+# Importing the scaling and encoding needed for modeling
+scaler = StandardScaler()
+label_encoder = LabelEncoder()
+
+# Creating a separate df to make things easier
+brooklyn_model_df = pd.DataFrame({
+    'Number of People Injured': crashes_in_brooklyn['NUMBER OF PERSONS INJURED'],
+    'Time of Crash': crashes_in_brooklyn['CRASH TIME'], 
+    'Median Household Income': zipcode_11207_income['Median Household Income'],
+    'Vehicle 1': crashes_in_brooklyn["CONTRIBUTING FACTOR VEHICLE 1"],
+    'Vehicle 2': crashes_in_brooklyn["CONTRIBUTING FACTOR VEHICLE 2"],
+    'Vehicle 3': crashes_in_brooklyn["CONTRIBUTING FACTOR VEHICLE 3"],
+    'Vehicle 4': crashes_in_brooklyn["CONTRIBUTING FACTOR VEHICLE 4"],
+    'Vehicle 5': crashes_in_brooklyn["CONTRIBUTING FACTOR VEHICLE 5"]
+})
+
+brooklyn_model_df['Median Household Income'] = scaler.fit_transform(brooklyn_model_df[['Median Household Income']])
+
+brooklyn_model_df.dropna(subset=['Number of People Injured'], inplace=True)
+
+brooklyn_model_df['Time of Crash'] = pd.to_datetime(brooklyn_model_df['Time of Crash']).dt.hour + pd.to_datetime(brooklyn_model_df['Time of Crash']).dt.minute / 60.0
+
+for col in ["Vehicle 1", "Vehicle 2", "Vehicle 3", "Vehicle 4", "Vehicle 5"]:
+    brooklyn_model_df[col + '_present'] = brooklyn_model_df[col].notna().astype(int)
+
+X = brooklyn_model_df[['Time of Crash'] + [col + '_present' for col in ["Vehicle 1", "Vehicle 2", "Vehicle 3", "Vehicle 4", "Vehicle 5']]]
+X['Scaled Median Household Income'] = brooklyn_model_df['Median Household Income']
+
+imputer = SimpleImputer(strategy='median')
+X_imputed = imputer.fit_transform(X)
+
+y = brooklyn_model_df['Number of People Injured']
+
+X.dropna(inplace=True)
+y = y[X.index]
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+y_pred = model.predict(X_test)
+mse = mean_squared_error(y_test, y_pred)
+
+print(f"Mean Squared Error: {mse}")
+											</code></pre>
+										</div>
+									</div>
+
+								</section>
+
+						</div>
+					</div>
+                    
+
+		<!-- Scripts -->
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/browser.min.js"></script>
+			<script src="assets/js/breakpoints.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<script src="assets/js/main.js"></script>
+
+	</body>
+</html>
